@@ -17,11 +17,13 @@
     <p></p>
 
     <form method="post">
+        <input type="hidden" name="cook" value="@Model.CookId" />
+        <input type="hidden" name="pi" value="@Model.DeviceId" />
         <fieldset>
             <legend>Adjust Chamber Target</legend>
             <div>
                 <label for="Target">Target (F):</label>
-                <input type="number"  name="ChamberTarget" value="@Model.ChamberTarget" min="0" max="350" />
+                <input type="number" name="ChamberTarget" value="@Model.ChamberTarget" min="0" max="450" />
             </div>
             <div>
                 <label>&nbsp;</label>
@@ -29,6 +31,10 @@
             </div>
         </fieldset>
     </form>
+
+    <p>
+        @Model.ChamberTargetStatus
+    </p>
 
 
     @if (Model.Readings.Count > 0)
@@ -47,9 +53,9 @@
                 @foreach (var r in Model.Readings)
                 {
                     <tr>
-                        <td>@r.Chamber</td>
-                        <td>@r.FoodOne</td>
-                        <td>@r.FoodTwo</td>
+                        <td>@r.Chamber°F</td>
+                        <td>@r.FoodOne°F</td>
+                        <td>@r.FoodTwo°F</td>
                         <td>@r.IsCookerOn</td>
                         <td>
                             <script>printDate('@r.Time')</script>

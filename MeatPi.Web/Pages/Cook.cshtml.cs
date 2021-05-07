@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Text.Json;
+using Microsoft.Azure.Devices;
 
 namespace MeatPi.Web.Pages
 {
@@ -30,22 +31,31 @@ namespace MeatPi.Web.Pages
 
         public class Probe
         {
-            public int Pin { get; set;  }
+            public int Pin { get; set; }
             public string Temperature { get; set; }
 
             public static IEnumerable<Probe> FromJson(string json)
             {
                 var readings = JsonSerializer.Deserialize<List<ReadingValue>>(json);
-                foreach(var r in readings)
+                foreach (var r in readings)
                 {
                     yield return new Probe
                     {
                         Pin = r.Pin,
-                        Temperature = ((((r.Kelvins - 273.15) * 9) / 5) + 32).ToString("N2")
+                        Temperature = KelvinsToFahrenheit(r.Kelvins).ToString("N2")
                     };
                 }
             }
+        }
 
+        private static double FahrenheitToKelvins(double fahrenheit)
+        {
+            return 5.0 / 9.0 * (fahrenheit + 459.67);
+        }
+
+        private static double KelvinsToFahrenheit(double kelvins)
+        {
+            return (kelvins * 9 / 5) - 459.67;
         }
 
         public class Reading
@@ -75,9 +85,11 @@ namespace MeatPi.Web.Pages
 
 
         [FromQuery(Name = "cook")]
+        [FromForm(Name = "cook")]
         public string CookId { get; set; }
 
         [FromQuery(Name = "pi")]
+        [FromForm(Name = "pi")]
         public string DeviceId { get; set; }
 
         public List<Reading> Readings { get; set; } = new List<Reading>();
@@ -85,14 +97,63 @@ namespace MeatPi.Web.Pages
         public string StartTime { get; set; }
         public string LastReading { get; set; }
         public string ChamberTarget { get; set; }
+        public string ChamberTargetStatus { get; set; }
+
+        public async Task OnPost()
+        {
+            const string HubConnection = "HubConnectionString";
+            const string DeviceMethodName = "SetTargetTemperature";
+            var client = ServiceClient.CreateFromConnectionString(Environment.GetEnvironmentVariable(HubConnection));
+
+            if (double.TryParse(Request.Form["ChamberTarget"], out var target))
+            {
+                if (target <= 450.0)
+                {
+                    var targetKelvins = FahrenheitToKelvins(target);
+
+                    var methodInvocation = new CloudToDeviceMethod(DeviceMethodName)
+                    {
+                        ResponseTimeout = TimeSpan.FromSeconds(30)
+                    };
+                    methodInvocation.SetPayloadJson(targetKelvins.ToString());
+
+                    var response = await client.InvokeDeviceMethodAsync(DeviceId, methodInvocation);
+                    if(response.Status == 200)
+                    {
+                        ChamberTargetStatus = $"Chamber temperature set to: {target}°F";
+                    }
+                    else if(response.Status == 400)
+                    {
+                        ChamberTargetStatus = $"Chamber temperature invalid: {target}°F";
+                    }
+
+                    await LoadData();
+                    ChamberTarget = target.ToString("N2");
+                }
+                else
+                {
+                    ChamberTargetStatus = "Chamber temperature cannot be set above 450°F";
+                    await LoadData();
+                }
+            }
+            else
+            {
+                await LoadData();
+            }
+        }
 
         public async Task OnGet()
+        {
+            await LoadData();
+        }
+
+        public async Task LoadData()
         {
             if (!string.IsNullOrEmpty(DeviceId) && !string.IsNullOrEmpty(CookId))
             {
                 // get all the readings for the cook in the last 2 hours
                 var cook = await AzureTableHelper.Get<CookTable>(CookTable.TableName, DeviceId, CookId);
-                if(cook != null)
+                if (cook != null)
                 {
                     LastReading = cook.LastTime;
                     StartTime = cook.StartTime;
