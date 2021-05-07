@@ -6,13 +6,16 @@ using System.Threading.Tasks;
 using Dasync.Collections;
 using Microsoft.Azure.Cosmos.Table;
 
-namespace MeatPi.Web.Model
+namespace MeatPi.Web
 {
     public static class AzureTableHelper
     {
-        const string StorageConfiguration = "AzureWebJobsStorage";
+        const string StorageConfiguration = "StorageConnectionString";
+        private static readonly CloudStorageAccount StorageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable(StorageConfiguration));
+
         public const string PartitionKey = nameof(TableEntity.PartitionKey);
         public const string RowKey = nameof(TableEntity.RowKey);
+        public const string Timestamp = nameof(TableEntity.Timestamp);
 
         public static readonly string[] BuiltInOperators = {
             QueryComparisons.Equal,
@@ -39,8 +42,6 @@ namespace MeatPi.Web.Model
 
         public static readonly string[] Operators = BuiltInOperators.Concat(StringOperators).ToArray();
         
-        private static readonly CloudStorageAccount StorageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable(StorageConfiguration));
-
         private static readonly SortedSet<string> CreatedTables = new SortedSet<string>();
 
         public static string NewId => Guid.NewGuid().ToString("N");

@@ -1,0 +1,64 @@
+﻿@page
+@model MeatPi.Web.Pages.CookModel
+@{
+    ViewData["Title"] = $"Cook";
+}
+
+<div class="text-center">
+    <h1>
+        Cook Started:
+        <script>printDate('@Model.StartTime')</script>
+    </h1>
+    <p></p>
+    <h3>
+        Last Reading:
+        <script>printDate('@Model.LastReading')</script>
+    </h3>
+    <p></p>
+
+    <form method="post">
+        <fieldset>
+            <legend>Adjust Chamber Target</legend>
+            <div>
+                <label for="Target">Target (F):</label>
+                <input type="number"  name="ChamberTarget" value="@Model.ChamberTarget" min="0" max="350" />
+            </div>
+            <div>
+                <label>&nbsp;</label>
+                <input type="submit" value="Submit" class="submit" />
+            </div>
+        </fieldset>
+    </form>
+
+
+    @if (Model.Readings.Count > 0)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Chamber</th>
+                    <th scope="col">Food #1</th>
+                    <th scope="col">Food #2</th>
+                    <th scope="col">Heating?</th>
+                    <th scope="col">Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Readings)
+                {
+                    <tr>
+                        <td>@r.Chamber</td>
+                        <td>@r.FoodOne</td>
+                        <td>@r.FoodTwo</td>
+                        <td>@r.IsCookerOn</td>
+                        <td>
+                            <script>printDate('@r.Time')</script>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h2>No data for cook :(</h2>
+</div>

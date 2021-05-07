@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 
-namespace MeatPi.Web.Model
+namespace MeatPi.Web
 {
     public class AzureQueueStorageHelper
     {
