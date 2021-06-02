@@ -83,7 +83,6 @@ namespace MeatPi.Web.Pages
             }
         }
 
-
         [FromQuery(Name = "cook")]
         [FromForm(Name = "cook")]
         public string CookId { get; set; }
@@ -159,7 +158,9 @@ namespace MeatPi.Web.Pages
                     StartTime = cook.StartTime;
 
                     var lastTime = DateTime.Parse(cook.LastTime);
-                    var condition = TableQuery.GenerateFilterConditionForDate(AzureTableHelper.Timestamp, QueryComparisons.GreaterThan, new DateTimeOffset(lastTime.AddHours(-2)));
+                    var deviceCookCondition = TableQuery.GenerateFilterCondition(AzureTableHelper.PartitionKey, QueryComparisons.Equal, ReadingTable.CreatePartitionKey(DeviceId, CookId));
+                    var lastTwoHoursCondition = TableQuery.GenerateFilterConditionForDate(AzureTableHelper.Timestamp, QueryComparisons.GreaterThan, new DateTimeOffset(lastTime.AddHours(-2)));
+                    var condition = AzureTableHelper.AggregateCondition(TableOperators.And, deviceCookCondition, lastTwoHoursCondition);
                     var rows = await AzureTableHelper.Query<ReadingTable>(ReadingTable.TableName, condition);
 
                     Readings.AddRange(rows.Select(r => Reading.FromTable(r)).OrderByDescending(r => r.Time));
