@@ -16,6 +16,10 @@ namespace MeatPi.Web
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            var storageConnectionString = Configuration.GetValue<string>("StorageConnectionString");
+
+            AzureTableHelper.Init(storageConnectionString);
+            AzureQueueStorageHelper.Init(storageConnectionString);
         }
 
         public IConfiguration Configuration { get; }

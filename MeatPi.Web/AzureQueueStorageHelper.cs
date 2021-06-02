@@ -7,11 +7,25 @@ namespace MeatPi.Web
 {
     public class AzureQueueStorageHelper
     {
-        const string StorageConfiguration = "StorageConnectionString";
+        private static string connectionString;
+        private static string ConnectionString
+        {
+            get
+            {
+                if (connectionString == null) throw new InvalidOperationException($"{nameof(AzureQueueStorageHelper)} has not been initialized.");
+                return connectionString;
+            }
+            set { connectionString = value; }
+        }
+
+        public static void Init(string storageConnectionString)
+        {
+            ConnectionString = storageConnectionString;
+        }
 
         private static QueueClient GetQueue(string name)
         {
-            return new QueueClient(Environment.GetEnvironmentVariable(StorageConfiguration), name);
+            return new QueueClient(ConnectionString, name);
         }
 
         public static async Task QueueMessage(string queueName, string message)

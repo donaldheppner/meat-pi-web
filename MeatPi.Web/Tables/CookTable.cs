@@ -9,7 +9,10 @@ namespace MeatPi.Web.Tables
         public CookTable() { }
         public CookTable(string deviceId, string cookId) : base(deviceId, cookId) { }
 
+        [IgnoreProperty]
         public string DeviceId => PartitionKey;
+
+        [IgnoreProperty]
         public string CookId => RowKey;
 
         public string StartTime { get; set; }

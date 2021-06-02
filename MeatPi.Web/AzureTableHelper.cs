@@ -10,8 +10,21 @@ namespace MeatPi.Web
 {
     public static class AzureTableHelper
     {
-        const string StorageConfiguration = "StorageConnectionString";
-        private static readonly CloudStorageAccount StorageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable(StorageConfiguration));
+        private static CloudStorageAccount storageAccount;
+        private static CloudStorageAccount StorageAccount
+        {
+            get
+            {
+                if (storageAccount == null) throw new InvalidOperationException($"{nameof(AzureTableHelper)} has not been initialized.");
+                return storageAccount;
+            }
+            set { storageAccount = value; }
+        }
+
+        public static void Init(string storageConnectionString)
+        {
+            StorageAccount = CloudStorageAccount.Parse(storageConnectionString);
+        }
 
         public const string PartitionKey = nameof(TableEntity.PartitionKey);
         public const string RowKey = nameof(TableEntity.RowKey);
@@ -41,7 +54,7 @@ namespace MeatPi.Web
         };
 
         public static readonly string[] Operators = BuiltInOperators.Concat(StringOperators).ToArray();
-        
+
         private static readonly SortedSet<string> CreatedTables = new SortedSet<string>();
 
         public static string NewId => Guid.NewGuid().ToString("N");
@@ -145,7 +158,7 @@ namespace MeatPi.Web
         // TODO: revise to avoid deep parenthetical nesting
         public static string AggregateCondition(string conditionOperator, params string[] conditions)
         {
-            return AggregateCondition(conditionOperator, (IEnumerable<string>) conditions);
+            return AggregateCondition(conditionOperator, (IEnumerable<string>)conditions);
         }
 
         public static string AggregateCondition(string conditionOperator, IEnumerable<string> conditions)

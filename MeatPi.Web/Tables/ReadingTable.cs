@@ -10,8 +10,13 @@ namespace MeatPi.Web.Tables
         public ReadingTable() { }
         public ReadingTable(string deviceId, string cookId, string time) : base(CreatePartitionKey(deviceId, cookId), time) { }
 
+        [IgnoreProperty]
         public string DeviceId => PartitionKey.Split("|")[0];
+
+        [IgnoreProperty]
         public string CookId => PartitionKey.Split("|")[1];
+
+        [IgnoreProperty]
         public string Time => RowKey;
 
         public double ChamberTarget { get; set; }

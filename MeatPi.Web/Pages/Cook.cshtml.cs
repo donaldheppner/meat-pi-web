@@ -9,11 +9,19 @@ using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Azure.Devices;
+using Microsoft.Extensions.Configuration;
 
 namespace MeatPi.Web.Pages
 {
     public class CookModel : PageModel
     {
+        private readonly IConfiguration _configuration;
+
+        public CookModel(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public class ReadingValue
         {
             [JsonPropertyName("pin")]
@@ -102,7 +110,7 @@ namespace MeatPi.Web.Pages
         {
             const string HubConnection = "HubConnectionString";
             const string DeviceMethodName = "SetTargetTemperature";
-            var client = ServiceClient.CreateFromConnectionString(Environment.GetEnvironmentVariable(HubConnection));
+            var client = ServiceClient.CreateFromConnectionString(_configuration.GetValue<string>(HubConnection));
 
             if (double.TryParse(Request.Form["ChamberTarget"], out var target))
             {
