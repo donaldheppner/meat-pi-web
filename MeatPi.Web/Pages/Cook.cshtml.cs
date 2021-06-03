@@ -168,8 +168,7 @@ namespace MeatPi.Web.Pages
                     var lastTime = DateTime.Parse(cook.LastTime);
                     var deviceCookCondition = TableQuery.GenerateFilterCondition(AzureTableHelper.PartitionKey, QueryComparisons.Equal, ReadingTable.CreatePartitionKey(DeviceId, CookId));
                     var lastTwoHoursCondition = TableQuery.GenerateFilterConditionForDate(AzureTableHelper.Timestamp, QueryComparisons.GreaterThan, new DateTimeOffset(lastTime.AddHours(-2)));
-                    var condition = AzureTableHelper.AggregateCondition(TableOperators.And, deviceCookCondition, lastTwoHoursCondition);
-                    var rows = await AzureTableHelper.Query<ReadingTable>(ReadingTable.TableName, condition);
+                    var rows = await AzureTableHelper.Query<ReadingTable>(ReadingTable.TableName, deviceCookCondition, lastTwoHoursCondition);
 
                     Readings.AddRange(rows.Select(r => Reading.FromTable(r)).OrderByDescending(r => r.Time));
                     ChamberTarget = Readings.First().ChamberTarget.ToString("N2");
